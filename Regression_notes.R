@@ -1,0 +1,14 @@
+set.seed(100) 
+Side_effect<-rbinom(1000,100,0.05) 
+head(Side_effect) 
+mean(Side_effect) 
+var(Side_effect)
+x=c(1,2,3,4,5,6,7,8,9,10)
+y=2*x+1
+y
+set.seed(19)
+x=rnorm(100)
+e=rnorm(100,0,2)
+y=.6+3.5*x+e
+head(y)
+summary(y)

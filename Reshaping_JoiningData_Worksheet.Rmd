@@ -1,0 +1,428 @@
+---
+title: "Worksheet: Reshaping and Joining Data Worksheet"
+subtitle: "STT 2860 Intro to Data Mgmt & Visualization" 
+author: "Andrew Balesky"
+date: "`r format(Sys.time(), '%A, %B %d, %Y @ %I:%M %p')`"
+output: 
+  html_document: 
+    theme: yeti
+    highlight: textmate
+    toc: true
+    toc_depth: 4 
+---
+
+```{r globaloptions, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  comment = NA
+)
+```
+
+
+***
+
+# Reshaping Data
+
+### Packages Used
+
+```{r}
+# load all packages used here
+library(tidyverse)
+library(HistData)
+library(skimr)
+```
+
+Reference: Week 11 lecture slides. 
+
+### Using `pivot_longer()`
+
+#### Powerball Data
+
+Read the Data
+```{r}
+powdata <- 
+  read_csv("https://aokine.github.io/Data/powerballnumbers.csv") %>% 
+  select(-multiplier)
+```
+
+Explore the Structure
+```{r}
+glimpse(powdata)
+```
+
+#### Gather the Numbers
+
+Use `pivot_longer()` to gather the six number columns into the columns `ballrank` and `ballnum`.
+
+```{r}
+powdata1 = powdata %>% pivot_longer(cols = c(low, second, third, fourth, high), names_to = "ballrank", values_to = "ballnum")
+```
+
+#### Summaries of the Numbers
+
+Unpivoted Data
+```{r}
+summary(powdata)
+```
+
+Pivoted Data
+```{r}
+summary(powdata1)
+```
+
+#### Plots of the Numbers
+
+*Plot the white powerball numbers (not including the powerball) for each drawing in 2017 showing how the values of balls (from lowest to highest) vary over time. Add a trend line for each rank (from lowest to highest).*
+
+
+
+Unpivoted Data
+```{r}
+ggplot(powdata, aes(x = year)) +
+  geom_line(aes(y = low, color = "low")) +
+  geom_line(aes(y = second, color = "second")) +
+  geom_line(aes(y = third, color = "third")) +
+  geom_line(aes(y = fourth, color = "fourth")) +
+  geom_line(aes(y = high, color = "high")) + 
+  geom_smooth(aes(y = low, color = "low"), alpha = 0.3, linewidth = 1, linetype = "dashed") +
+  geom_smooth(aes(y = second, color = "second"), alpha = 0.3, linewidth = 1, linetype = "dashed") +
+  geom_smooth(aes(y = third, color = "third"), alpha = 0.3, linewidth = 1, linetype = "dashed") +
+  geom_smooth(aes(y = fourth, color = "fourth"), alpha = 0.3, linewidth = 1, linetype = "dashed") +
+  geom_smooth(aes(y = high, color = "high"), alpha = 0.3, linewidth = 1, linetype = "dashed") +
+  labs(title = "Powerball Numbers over time(Wide Format)",
+       x = "Year",
+       y = "Ball Number",
+       color = "Ball Rank") +
+  theme_minimal()
+```
+
+Pivoted Data
+```{r}
+ggplot(powdata1, aes(x = year, y = ballnum, color = ballrank)) +
+  geom_line() +
+  geom_smooth(alpha = 0.3, linewidth = 1, linetype = "dashed") +
+  labs(title = "Powerball Numbers over time(Long Format)",
+       x = "Year",
+       y = "Ball Number",
+       color = "Ball Rank") +
+  theme_minimal()
+```
+
+
+
+### Using `pivot_wider()`
+
+
+#### Farr's 1849 Deaths
+
+Read the Data
+```{r}
+choldata <- CholeraDeaths1849
+```
+
+Explore the Structure
+```{r}
+glimpse(choldata)
+```
+
+#### Spread the Causes of Death
+
+Spread the data so that the `deaths` for the two `cause_of_death` are in different columns.
+
+```{r}
+choldata %>% pivot_wider(names_from = "cause_of_death", values_from = "deaths")
+```
+
+
+
+
+# Joining Data
+
+## Packages Used
+
+```{r packagesused}
+library(tidyverse)
+library(skimr)
+```
+
+## Datasets Used
+
+### Myers-Briggs Personality Datasets
+
+Personality types determined using the [Jung Typology Test](https://www.humanmetrics.com/personality).
+
+#### STT1810 Class Data
+
+```{r readclass1}
+class1 <- read_csv("https://aokine.github.io/Data/personalitySTT1810.csv")
+glimpse(class1)
+```
+
+#### STT3850 Class Data
+
+```{r readclass2}
+class2 <- read_csv("https://aokine.github.io/Data/personalitySTT3850.csv")
+glimpse(class2)
+```
+
+### Census Population Data
+
+Census data taken from tables found on Wikipedia.
+
+#### 1970 and 1980
+
+```{r readcensus1}
+census1 <- read_csv("https://aokine.github.io/Data/census19701980.csv")
+glimpse(census1)
+```
+
+#### 1990 and 2000
+
+```{r readcensus2}
+census2 <- read_csv("https://aokine.github.io/Data/census19902000.csv")
+glimpse(census2)
+```
+
+
+
+#### 2010 and 2020
+
+```{r readcensus3}
+census3 <- read_csv("https://aokine.github.io/Data/census20102020.csv")
+glimpse(census3)
+```
+
+### Electoral Votes
+
+Data from [US Electoral College Votes Per State 1788-2020 | Kaggle](https://www.kaggle.com/datasets/daithibhard/us-electoral-college-votes-per-state-17882020)
+
+```{r readelectoralvotes}
+votes <- read_csv("https://aokine.github.io/Data/electoralvotes.csv")
+glimpse(votes)
+```
+
+## Examples of Combining
+
+### `bind_rows()`
+
+#### Simple row binding
+
+I want to row bind my two class. They have the same variables, and in each dataset one row represents one student.
+
+The `bind_rows()` function matches on names. Are all the names the same? If not, I need to use `rename()` or some similar operation.
+
+```{r}
+bind_rows(class1, class2)
+```
+
+Bind the two classes together using `bind_rows()` and store it as `mbtidata1`. Can you do it both with and without piping?
+
+```{r}
+mbtidata1 = bind_rows(class1,class2)
+```
+
+Use `glimpse()` to explore the structure of `mbtidata1`.
+
+```{r}
+glimpse(mbtidata1)
+```
+
+Let's also look at what `skim()` does.
+
+```{r}
+skim(mbtidata1)
+```
+
+#### Binding with an ID #1
+
+If I do a simple binding, I don't know which data came from which class. Add a variable called `ClassID` as part of the binding process. Store this dataset as `mbtidata2`.
+
+```{r}
+mbtidata2 = bind_rows(class1,class2, .id = "ClassID")
+```
+
+Use `glimpse()` to explore the structure of `mbtidata2`.
+
+```{r}
+glimpse(mbtidata2)
+```
+
+#### Binding with an ID #2
+
+If I want to be able to specify my ID values, I need to enter the datasets I want to bind as a named list. The assigned names become the ID values.
+
+```{r}
+mbtidata3 = bind_rows(
+  list(
+    Class_1 = class2,
+    Class_2 = class2
+  ),
+  .id = "ClassID"
+)
+```
+
+
+Use `glimpse()` to explore the structure of `mbtidata3`.
+
+```{r}
+glimpse(mbtidata3)
+```
+
+### `bind_cols()`
+
+#### Using column binding
+
+I want to column bind the first two census datasets. Perform that operation with `bind_cols()` and save as `censusdata1`.
+
+```{r}
+censusdata1 = bind_cols(census1,census2)
+censusdata1 = censusdata1 %>%
+  rename(
+    state1 = `state...1`,
+    state2 = `state...4`
+ )
+```
+
+Use `head()` to show the first ten rows of `censusdata1`. What problem do you see with the result of your binding?
+
+```{r}
+head(censusdata1)
+```
+
+The data files are sorted in order from largest to smallest population. We need to sort each file by state name to join properly. Perform the sorting (arranging) and binding. Save the result as `censusdata2`.
+
+```{r}
+censusdata2 = censusdata1
+censusdata2$state1 = sort(censusdata1$state1)
+censusdata2$state2 = sort(censusdata1$state2)
+```
+
+Use `head()` to show the first ten rows of `censusdata2`. What problem do you see with the result of your binding?
+
+```{r}
+head(censusdata2)
+```
+
+Each dataset has a column called `state`. They both get saved but renamed. Perform additional manipulations using dplyr so that you only have one column called `state` containing the state names. Save the result as `censusdata3`.
+
+```{r}
+censusdata3 = censusdata2 %>%
+  pivot_longer(cols = c(state1, state2),
+               names_to = "source",
+               values_to = "state")
+```
+
+Use `head()` to show the first ten rows of `censusdata3`. Is everything good now?
+
+```{r}
+head(censusdata3)
+```
+
+
+
+Now do all three census datasets! The result should have only one `state` column. Save as `censusdata4`.
+
+```{r}
+sort(census1$state)
+sort(census2$state)
+sort(census3$state)
+censusdata4 = bind_cols(census1,census2,census3) %>% rename(
+    state1 = `state...1`,
+    state2 = `state...4`,
+    state3 = `state...7`
+ ) %>% 
+  pivot_longer(cols = c(state1, state2, state3),
+               names_to = "source",
+               values_to = "state")
+```
+
+Use `head()` to show the first ten rows of `censusdata4`. Does everything look good?
+
+```{r}
+head(censusdata4)
+```
+
+Challenge! How can I pivot `censusdata4` into a longer dataset that has year as a variable? I'd like the three variables to be `state`, `year`, and `population`.
+
+```{r}
+censusdata4long = pivot_longer(censusdata4, cols = 1:6, names_to = "year", values_to = "population", names_repair = "minimal") %>%
+  select(-source)
+head(censusdata4long)
+```
+
+
+
+
+### Mutating Joins
+
+#### `left_join()`
+
+I would like to add the electoral votes from the `votes` dataset to `censusdata4long`. I want to keep everything in the census dataset (X) and add to it any matches in `votes` (Y). 
+
+```{r}
+glimpse(votes)
+head(votes)
+tail(votes)
+```
+
+What are the `key` variables? Both have `state` and `year` that will uniquely identify rows.
+
+```{r}
+votes <- votes %>%
+  mutate(year = as.character(year))
+censusdata4long %>% left_join(votes, by = c("state", "year"))
+```
+
+
+#### `right_join()`
+
+Can you join the datasets using `right_join()` instead of `left_join()`?
+
+```{r}
+
+censusdata4long %>% right_join(votes, by = c("state", "year"))
+```
+
+#### `inner_join()`
+
+What happens if we join this way?
+
+```{r}
+censusdata4long %>% inner_join(votes, by = c("state", "year"))
+```
+
+#### `full_join()`
+
+What happens if we join this way?
+
+```{r}
+censusdata4long %>% full_join(votes, by = c("state", "year"))
+```
+
+### Filtering Joins
+
+#### `semi_join()`
+
+```{r}
+censusdata4long %>% semi_join(votes, by = c("state", "year"))
+```
+
+
+
+#### `anti_join()`
+
+```{r}
+censusdata4long %>% anti_join(votes, by = c("state", "year"))
+```
+
+
+
+
+
+
+***
+```{r}
+sessionInfo()
+```
+
